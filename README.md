@@ -46,10 +46,16 @@ docker run --name postgres-db -e POSTGRES_PASSWORD=password -p 5432:5432 -d post
 cp .env.example .env
 ```
 
-2. Update the `DATABASE_URL` in your `.env` file:
+2. Update the database and Redis URLs in your `.env` file:
 
 ```env
+# Database
 DATABASE_URL="postgresql://username:password@localhost:5432/undertaker_db?schema=public"
+
+# Redis (Upstash or local Redis)
+REDIS_URL="redis://localhost:6379"
+# For Upstash Redis, use:
+# REDIS_URL="rediss://username:password@your-upstash-url:port"
 ```
 
 ### Database Migration and Setup
@@ -89,6 +95,48 @@ $ yarn prisma:reset
 # Seed database
 $ yarn db:seed
 ```
+
+## Redis Setup
+
+This project uses Redis for caching. You can use either a local Redis instance or Upstash Redis.
+
+### Local Redis Setup
+
+Install and run Redis locally:
+
+```bash
+# Using Docker
+docker run --name redis-cache -p 6379:6379 -d redis
+
+# Or using Homebrew (macOS)
+brew install redis
+brew services start redis
+```
+
+### Upstash Redis Setup
+
+1. Sign up for [Upstash](https://upstash.com/)
+2. Create a new Redis database
+3. Copy the Redis URL from your dashboard
+4. Update the `REDIS_URL` in your `.env` file:
+
+```env
+REDIS_URL="rediss://your-username:your-password@your-upstash-endpoint:port"
+```
+
+### Available Redis Methods
+
+The `RedisService` provides the following methods:
+
+- `set(key, value, ttl?)` - Set a key-value pair with optional TTL
+- `get(key)` - Get value by key
+- `del(key)` - Delete a key
+- `exists(key)` - Check if key exists
+- `ttl(key)` - Get TTL for a key
+- `expire(key, ttl)` - Set expiry for a key
+- `keys(pattern)` - Get keys by pattern
+- `mget(...keys)` - Get multiple values
+- `mset(keyValues)` - Set multiple key-value pairs
 
 ## Project setup
 
