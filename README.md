@@ -32,30 +32,97 @@ This project uses [Prisma](https://www.prisma.io/) as the ORM for database opera
 
 ### Prerequisites
 
-Make sure you have a PostgreSQL database running. You can use Docker:
+Make sure you have PostgreSQL and Redis running. You have two options:
+
+#### Option 1: Using Docker Compose (Recommended)
+
+Start both PostgreSQL and Redis with non-standard ports:
+
+```bash
+# Start all services
+docker-compose up -d
+
+# Check service status
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+This will start:
+
+- PostgreSQL on port `5487` (instead of standard 5432)
+- Redis on port `6380` (instead of standard 6379)
+- Redis Commander UI on port `8081` for Redis management
+
+#### Option 2: Manual Setup
+
+PostgreSQL:
 
 ```bash
 docker run --name postgres-db -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres
 ```
 
-### Environment Setup
-
-1. Copy the environment template:
+Redis:
 
 ```bash
-cp .env.example .env
+docker run --name redis-cache -p 6379:6379 -d redis
 ```
 
-2. Update the database and Redis URLs in your `.env` file:
+### Environment Setup
+
+1. Create your `.env` file:
+
+```bash
+touch .env
+```
+
+2. Add the appropriate environment variables based on your setup:
+
+#### For Docker Compose Setup:
 
 ```env
-# Database
+# Database (Docker Compose - non-standard port)
+DATABASE_URL="postgresql://undertaker_user:undertaker_password@localhost:5487/undertaker_db?schema=public"
+
+# Redis (Docker Compose - non-standard port with password)
+REDIS_URL="redis://:undertaker_redis_password@localhost:6380"
+
+# Application
+NODE_ENV="development"
+PORT=3000
+```
+
+#### For Manual Setup:
+
+```env
+# Database (Manual setup - standard port)
 DATABASE_URL="postgresql://username:password@localhost:5432/undertaker_db?schema=public"
 
-# Redis (Upstash or local Redis)
+# Redis (Manual setup - standard port, no password)
 REDIS_URL="redis://localhost:6379"
-# For Upstash Redis, use:
-# REDIS_URL="rediss://username:password@your-upstash-url:port"
+
+# Application
+NODE_ENV="development"
+PORT=3000
+```
+
+#### For Production with Upstash Redis:
+
+```env
+# Database (Production)
+DATABASE_URL="postgresql://username:password@your-host:5432/undertaker_db?schema=public"
+
+# Redis (Upstash)
+REDIS_URL="rediss://username:password@your-upstash-url:port"
+
+# Application
+NODE_ENV="production"
+PORT=3000
+JWT_SECRET="your-secure-jwt-secret"
 ```
 
 ### Database Migration and Setup
@@ -168,6 +235,64 @@ $ yarn run test:e2e
 
 # test coverage
 $ yarn run test:cov
+```
+
+## Docker Scripts
+
+Convenient scripts for Docker Compose management:
+
+```bash
+# Start all services (PostgreSQL, Redis, Redis Commander)
+$ yarn docker:up
+
+# Stop all services
+$ yarn docker:down
+
+# View service logs
+$ yarn docker:logs
+
+# Check service status
+$ yarn docker:ps
+
+# Restart services
+$ yarn docker:restart
+```
+
+## API Endpoints
+
+### Health Check
+
+- `GET /health` - General health check with Redis connection status
+- `GET /redis/status` - Detailed Redis connection test
+
+Example responses:
+
+```bash
+# Health check
+curl http://localhost:3000/health
+
+# Redis status check
+curl http://localhost:3000/redis/status
+```
+
+### Users API
+
+- `GET /users` - Get all users
+- `GET /users/:id` - Get user by ID
+- `POST /users` - Create new user
+- `PATCH /users/:id` - Update user
+- `DELETE /users/:id` - Delete user
+
+Example usage:
+
+```bash
+# Create a user
+curl -X POST http://localhost:3000/users \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@example.com", "name": "Test User"}'
+
+# Get all users
+curl http://localhost:3000/users
 ```
 
 ## Resources
