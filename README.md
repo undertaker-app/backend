@@ -82,11 +82,14 @@ touch .env
 
 2. Add the appropriate environment variables based on your setup:
 
-#### For Docker Compose Setup:
+#### For Docker Compose Setup (Local Redis):
 
 ```env
 # Database (Docker Compose - non-standard port)
 DATABASE_URL="postgresql://undertaker_user:undertaker_password@localhost:5487/undertaker_db?schema=public"
+
+# Cache Provider (redis/upstash/memory)
+CACHE_PROVIDER="redis"
 
 # Redis (Docker Compose - non-standard port with password)
 REDIS_URL="redis://:undertaker_redis_password@localhost:6380"
@@ -96,11 +99,14 @@ NODE_ENV="development"
 PORT=3000
 ```
 
-#### For Manual Setup:
+#### For Manual Setup (Local Redis):
 
 ```env
 # Database (Manual setup - standard port)
 DATABASE_URL="postgresql://username:password@localhost:5432/undertaker_db?schema=public"
+
+# Cache Provider
+CACHE_PROVIDER="redis"
 
 # Redis (Manual setup - standard port, no password)
 REDIS_URL="redis://localhost:6379"
@@ -110,19 +116,37 @@ NODE_ENV="development"
 PORT=3000
 ```
 
-#### For Production with Upstash Redis:
+#### For Upstash Redis (Cloud):
 
 ```env
-# Database (Production)
+# Database
 DATABASE_URL="postgresql://username:password@your-host:5432/undertaker_db?schema=public"
 
-# Redis (Upstash)
-REDIS_URL="rediss://username:password@your-upstash-url:port"
+# Cache Provider
+CACHE_PROVIDER="upstash"
+
+# Upstash Redis REST API
+UPSTASH_REDIS_REST_URL="https://your-upstash-endpoint.upstash.io"
+UPSTASH_REDIS_REST_TOKEN="your-upstash-token"
 
 # Application
 NODE_ENV="production"
 PORT=3000
 JWT_SECRET="your-secure-jwt-secret"
+```
+
+#### For In-Memory Cache (Development/Testing):
+
+```env
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/undertaker_db?schema=public"
+
+# Cache Provider (no additional Redis setup needed)
+CACHE_PROVIDER="memory"
+
+# Application
+NODE_ENV="development"
+PORT=3000
 ```
 
 ### Database Migration and Setup
@@ -163,16 +187,33 @@ $ yarn prisma:reset
 $ yarn db:seed
 ```
 
-## Redis Setup
+## Cache System
 
-This project uses Redis for caching. You can use either a local Redis instance or Upstash Redis.
+This project uses a flexible cache system that supports multiple providers through a common interface.
 
-### Local Redis Setup
+### Supported Cache Providers
 
-Install and run Redis locally:
+1. **In-Memory Cache** (`memory`) - Built-in, no external dependencies
+2. **Redis Cache** (`redis`) - Using ioredis for local Redis instances
+3. **Upstash Cache** (`upstash`) - Using @upstash/redis for serverless Redis
+
+### Cache Provider Selection
+
+Set the `CACHE_PROVIDER` environment variable to choose your cache backend:
+
+- `CACHE_PROVIDER="memory"` - In-memory cache (development/testing)
+- `CACHE_PROVIDER="redis"` - Local Redis using ioredis
+- `CACHE_PROVIDER="upstash"` - Upstash Redis for production
+
+### Local Redis Setup (ioredis)
+
+If using `CACHE_PROVIDER="redis"`:
 
 ```bash
-# Using Docker
+# Using Docker Compose (recommended)
+yarn docker:up
+
+# Or manually with Docker
 docker run --name redis-cache -p 6379:6379 -d redis
 
 # Or using Homebrew (macOS)
@@ -182,18 +223,24 @@ brew services start redis
 
 ### Upstash Redis Setup
 
+If using `CACHE_PROVIDER="upstash"`:
+
 1. Sign up for [Upstash](https://upstash.com/)
 2. Create a new Redis database
-3. Copy the Redis URL from your dashboard
-4. Update the `REDIS_URL` in your `.env` file:
+3. Get your REST URL and token from the dashboard
+4. Set environment variables:
 
 ```env
-REDIS_URL="rediss://your-username:your-password@your-upstash-endpoint:port"
+CACHE_PROVIDER="upstash"
+UPSTASH_REDIS_REST_URL="https://your-endpoint.upstash.io"
+UPSTASH_REDIS_REST_TOKEN="your-token-here"
 ```
 
-### Available Redis Methods
+### Available Cache Methods
 
-The `RedisService` provides the following methods:
+The `ICacheService` interface provides the following methods:
+
+#### Basic Operations
 
 - `set(key, value, ttl?)` - Set a key-value pair with optional TTL
 - `get(key)` - Get value by key
@@ -205,11 +252,40 @@ The `RedisService` provides the following methods:
 - `mget(...keys)` - Get multiple values
 - `mset(keyValues)` - Set multiple key-value pairs
 
+#### Advanced Operations (if supported by provider)
+
+- **Hash operations**: `hset`, `hget`, `hgetall`, `hdel`
+- **List operations**: `lpush`, `rpush`, `lpop`, `rpop`, `lrange`
+- **Set operations**: `sadd`, `smembers`, `srem`, `spop`
+- **Sorted set operations**: `zadd`, `zrange`, `zrem`
+
+### Usage in Code
+
+````typescript
+import { Inject } from '@nestjs/common';
+import { ICacheService } from './shared/cache';
+
+@Injectable()
+export class MyService {
+  constructor(
+    @Inject('CACHE_STORE') private readonly cache: ICacheService,
+  ) {}
+
+  async cacheData(key: string, data: any, ttl: number = 3600) {
+    await this.cache.set(key, JSON.stringify(data), ttl);
+  }
+
+  async getCachedData(key: string) {
+    const cached = await this.cache.get(key);
+    return cached ? JSON.parse(cached) : null;
+  }
+}
+
 ## Project setup
 
 ```bash
 $ yarn install
-```
+````
 
 ## Compile and run the project
 
@@ -262,8 +338,9 @@ $ yarn docker:restart
 
 ### Health Check
 
-- `GET /health` - General health check with Redis connection status
-- `GET /redis/status` - Detailed Redis connection test
+- `GET /health` - General health check with cache connection status
+- `GET /cache/status` - Detailed cache connection test
+- `GET /cache/demo` - Comprehensive cache operations demonstration
 
 Example responses:
 
@@ -271,8 +348,11 @@ Example responses:
 # Health check
 curl http://localhost:3000/health
 
-# Redis status check
-curl http://localhost:3000/redis/status
+# Cache status check
+curl http://localhost:3000/cache/status
+
+# Cache operations demo (shows all cache types)
+curl http://localhost:3000/cache/demo
 ```
 
 ### Users API
