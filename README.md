@@ -24,7 +24,71 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository with Prisma ORM integration.
+
+## Database Setup with Prisma
+
+This project uses [Prisma](https://www.prisma.io/) as the ORM for database operations.
+
+### Prerequisites
+
+Make sure you have a PostgreSQL database running. You can use Docker:
+
+```bash
+docker run --name postgres-db -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres
+```
+
+### Environment Setup
+
+1. Copy the environment template:
+
+```bash
+cp .env.example .env
+```
+
+2. Update the `DATABASE_URL` in your `.env` file:
+
+```env
+DATABASE_URL="postgresql://username:password@localhost:5432/undertaker_db?schema=public"
+```
+
+### Database Migration and Setup
+
+```bash
+# Generate Prisma client
+$ yarn prisma:generate
+
+# Run database migrations
+$ yarn prisma:migrate
+
+# Seed the database with sample data
+$ yarn db:seed
+
+# Open Prisma Studio (database GUI)
+$ yarn prisma:studio
+```
+
+### Available Prisma Scripts
+
+```bash
+# Generate Prisma client
+$ yarn prisma:generate
+
+# Create and apply migrations
+$ yarn prisma:migrate
+
+# Push schema changes without migrations
+$ yarn prisma:push
+
+# Open Prisma Studio
+$ yarn prisma:studio
+
+# Reset database
+$ yarn prisma:reset
+
+# Seed database
+$ yarn db:seed
+```
 
 ## Project setup
 
