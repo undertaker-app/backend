@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: undertaker-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: undertaker_db
+      POSTGRES_USER: undertaker_user
+      POSTGRES_PASSWORD: undertaker_password
+    ports:
+      - '5487:5432' # 비표준 포트 5487 사용
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - undertaker-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: undertaker-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass undertaker_redis_password
+    ports:
+      - '6380:6379' # 비표준 포트 6380 사용
+    volumes:
+      - redis_data:/data
+    networks:
+      - undertaker-network
+
+  # 선택사항: Redis 관리 UI
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: undertaker-redis-ui
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: local:redis:6379:0:undertaker_redis_password
+    ports:
+      - '8081:8081'
+    depends_on:
+      - redis
+    networks:
+      - undertaker-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  undertaker-network:
+    driver: bridge
