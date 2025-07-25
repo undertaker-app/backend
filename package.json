@@ -24,6 +24,8 @@
     "prisma:studio": "prisma studio",
     "prisma:reset": "prisma migrate reset",
     "db:seed": "ts-node prisma/seed.ts",
+    "prisma:deploy": "prisma migrate deploy",
+    "postbuild": "prisma generate",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
