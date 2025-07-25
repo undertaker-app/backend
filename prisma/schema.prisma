@@ -13,27 +13,70 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Example models - you can modify these according to your needs
+// 사용자 테이블
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  posts     Post[]
+  id                 Int       @id @default(autoincrement())
+  email              String    @unique
+  password           String
+  nickname           String    @db.VarChar(50)
+  phoneNumber        String?   @map("phone_number")
+  coinBalance        Int       @default(0) @map("coin_balance")
+  penaltyCount       Int       @default(0) @map("penalty_count")
+  isBanned           Boolean   @default(false) @map("is_banned")
+  profileImageUrl    String?   @map("profile_image_url")
+  lastLoginAt        DateTime? @map("last_login_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  // 관계
+  refreshTokens      RefreshToken[]
+  emailVerifications EmailVerification[]
+  posts              Post[]
 
   @@map("users")
 }
 
+// JWT 리프레시 토큰 관리
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    Int      @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  isRevoked Boolean  @default(false) @map("is_revoked")
+
+  // 관계
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+// 이메일 인증 코드
+model EmailVerification {
+  id        String   @id @default(cuid())
+  email     String
+  code      String   @db.VarChar(6)
+  userId    Int?     @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  isUsed    Boolean  @default(false) @map("is_used")
+
+  // 관계
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_verifications")
+}
+
+// 기존 Post 모델 (추후 지하철 좌석 관련으로 변경 예정)
 model Post {
   id        String   @id @default(cuid())
   title     String
   content   String?
   published Boolean  @default(false)
-  authorId  String
+  authorId  Int      @map("author_id")
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("posts")
 }
