@@ -1,402 +1,176 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Undertaker Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS 기반의 백엔드 애플리케이션입니다. PostgreSQL과 Redis를 사용하며, Prisma ORM을 통해 데이터베이스를 관리합니다.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 빠른 시작
 
-## Description
+### 1. 의존성 서비스 실행 (Docker)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository with Prisma ORM integration.
-
-## Database Setup with Prisma
-
-This project uses [Prisma](https://www.prisma.io/) as the ORM for database operations.
-
-### Prerequisites
-
-Make sure you have PostgreSQL and Redis running. You have two options:
-
-#### Option 1: Using Docker Compose (Recommended)
-
-Start both PostgreSQL and Redis with non-standard ports:
+로컬 개발을 위해 PostgreSQL과 Redis를 Docker Compose로 실행합니다:
 
 ```bash
-# Start all services
-docker-compose up -d
-
-# Check service status
-docker-compose ps
-
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
-```
-
-This will start:
-
-- PostgreSQL on port `5487` (instead of standard 5432)
-- Redis on port `6380` (instead of standard 6379)
-- Redis Commander UI on port `8081` for Redis management
-
-#### Option 2: Manual Setup
-
-PostgreSQL:
-
-```bash
-docker run --name postgres-db -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres
-```
-
-Redis:
-
-```bash
-docker run --name redis-cache -p 6379:6379 -d redis
-```
-
-### Environment Setup
-
-1. Create your `.env` file:
-
-```bash
-touch .env
-```
-
-2. Add the appropriate environment variables based on your setup:
-
-#### For Docker Compose Setup (Local Redis):
-
-```env
-# Database (Docker Compose - non-standard port)
-DATABASE_URL="postgresql://undertaker_user:undertaker_password@localhost:5487/undertaker_db?schema=public"
-
-# Cache Provider (redis/upstash/memory)
-CACHE_PROVIDER="redis"
-
-# Redis (Docker Compose - non-standard port with password)
-REDIS_URL="redis://:undertaker_redis_password@localhost:6380"
-
-# Application
-NODE_ENV="development"
-PORT=3000
-```
-
-#### For Manual Setup (Local Redis):
-
-```env
-# Database (Manual setup - standard port)
-DATABASE_URL="postgresql://username:password@localhost:5432/undertaker_db?schema=public"
-
-# Cache Provider
-CACHE_PROVIDER="redis"
-
-# Redis (Manual setup - standard port, no password)
-REDIS_URL="redis://localhost:6379"
-
-# Application
-NODE_ENV="development"
-PORT=3000
-```
-
-#### For Upstash Redis (Cloud):
-
-```env
-# Database
-DATABASE_URL="postgresql://username:password@your-host:5432/undertaker_db?schema=public"
-
-# Cache Provider
-CACHE_PROVIDER="upstash"
-
-# Upstash Redis REST API
-UPSTASH_REDIS_REST_URL="https://your-upstash-endpoint.upstash.io"
-UPSTASH_REDIS_REST_TOKEN="your-upstash-token"
-
-# Application
-NODE_ENV="production"
-PORT=3000
-JWT_SECRET="your-secure-jwt-secret"
-```
-
-#### For In-Memory Cache (Development/Testing):
-
-```env
-# Database
-DATABASE_URL="postgresql://username:password@localhost:5432/undertaker_db?schema=public"
-
-# Cache Provider (no additional Redis setup needed)
-CACHE_PROVIDER="memory"
-
-# Application
-NODE_ENV="development"
-PORT=3000
-```
-
-### Database Migration and Setup
-
-```bash
-# Generate Prisma client
-$ yarn prisma:generate
-
-# Run database migrations
-$ yarn prisma:migrate
-
-# Seed the database with sample data
-$ yarn db:seed
-
-# Open Prisma Studio (database GUI)
-$ yarn prisma:studio
-```
-
-### Available Prisma Scripts
-
-```bash
-# Generate Prisma client
-$ yarn prisma:generate
-
-# Create and apply migrations
-$ yarn prisma:migrate
-
-# Push schema changes without migrations
-$ yarn prisma:push
-
-# Open Prisma Studio
-$ yarn prisma:studio
-
-# Reset database
-$ yarn prisma:reset
-
-# Seed database
-$ yarn db:seed
-```
-
-## Cache System
-
-This project uses a flexible cache system that supports multiple providers through a common interface.
-
-### Supported Cache Providers
-
-1. **In-Memory Cache** (`memory`) - Built-in, no external dependencies
-2. **Redis Cache** (`redis`) - Using ioredis for local Redis instances
-3. **Upstash Cache** (`upstash`) - Using @upstash/redis for serverless Redis
-
-### Cache Provider Selection
-
-Set the `CACHE_PROVIDER` environment variable to choose your cache backend:
-
-- `CACHE_PROVIDER="memory"` - In-memory cache (development/testing)
-- `CACHE_PROVIDER="redis"` - Local Redis using ioredis
-- `CACHE_PROVIDER="upstash"` - Upstash Redis for production
-
-### Local Redis Setup (ioredis)
-
-If using `CACHE_PROVIDER="redis"`:
-
-```bash
-# Using Docker Compose (recommended)
+# 모든 서비스 시작 (PostgreSQL, Redis, Redis Commander)
 yarn docker:up
 
-# Or manually with Docker
-docker run --name redis-cache -p 6379:6379 -d redis
+# 서비스 상태 확인
+yarn docker:ps
 
-# Or using Homebrew (macOS)
-brew install redis
-brew services start redis
+# 서비스 중지
+yarn docker:down
 ```
 
-### Upstash Redis Setup
+실행되는 서비스:
 
-If using `CACHE_PROVIDER="upstash"`:
+- **PostgreSQL**: `localhost:5487` (비표준 포트)
+- **Redis**: `localhost:6380` (비표준 포트)
+- **Redis Commander**: `localhost:8081` (Redis 관리 UI)
 
-1. Sign up for [Upstash](https://upstash.com/)
-2. Create a new Redis database
-3. Get your REST URL and token from the dashboard
-4. Set environment variables:
+### 2. 환경변수 설정
+
+`.env` 파일을 생성하고 다음 내용을 추가하세요:
 
 ```env
+# 데이터베이스 (Docker Compose)
+DATABASE_URL="postgresql://undertaker_user:undertaker_password@localhost:5487/undertaker_db?schema=public"
+
+# 캐시 설정
+CACHE_PROVIDER="redis"
+REDIS_URL="redis://:undertaker_redis_password@localhost:6380"
+
+# 애플리케이션
+NODE_ENV="development"
+PORT=3000
+```
+
+### 3. 애플리케이션 빌드 및 실행
+
+```bash
+# 패키지 설치
+yarn install
+
+# Prisma 클라이언트 생성
+yarn prisma:generate
+
+# 데이터베이스 마이그레이션
+yarn prisma:push
+
+# 개발 모드 실행
+yarn start:dev
+
+# 프로덕션 빌드
+yarn build
+
+# 프로덕션 모드 실행
+yarn start:prod
+```
+
+## 📊 데이터베이스 관리 (Prisma)
+
+### 기본 명령어
+
+```bash
+# Prisma 클라이언트 생성
+yarn prisma:generate
+
+# 스키마를 데이터베이스에 적용 (개발용)
+yarn prisma:push
+
+# 마이그레이션 생성 및 적용 (프로덕션용)
+yarn prisma:migrate
+
+# 데이터베이스 초기화
+yarn prisma:reset
+
+# 샘플 데이터 입력
+yarn db:seed
+
+# Prisma Studio 실행 (DB GUI)
+yarn prisma:studio
+```
+
+### 스키마 변경 시 워크플로우
+
+1. `prisma/schema.prisma` 파일 수정
+2. `yarn prisma:push` (개발 환경)
+3. `yarn prisma:generate` (클라이언트 재생성)
+
+## 🗂️ 캐시 시스템 특이사항
+
+본 프로젝트는 환경에 따라 다른 캐시 시스템을 사용합니다:
+
+### 로컬 개발 환경
+
+- **Redis (ioredis)**: Docker Compose로 로컬 Redis 인스턴스 실행
+- 빠른 개발과 디버깅을 위해 로컬 환경 선택
+
+### 클라우드/프로덕션 환경
+
+- **Upstash Redis**: 서버리스 Redis 서비스 사용
+- 인프라 관리 부담 없이 확장 가능한 캐시 제공
+
+### 캐시 제공자 설정
+
+환경변수 `CACHE_PROVIDER`로 제어:
+
+```env
+# 로컬 Redis (Docker)
+CACHE_PROVIDER="redis"
+REDIS_URL="redis://:password@localhost:6380"
+
+# Upstash Redis (클라우드)
 CACHE_PROVIDER="upstash"
 UPSTASH_REDIS_REST_URL="https://your-endpoint.upstash.io"
-UPSTASH_REDIS_REST_TOKEN="your-token-here"
+UPSTASH_REDIS_REST_TOKEN="your-token"
+
+# 인메모리 캐시 (테스트용)
+CACHE_PROVIDER="memory"
 ```
 
-### Available Cache Methods
-
-The `ICacheService` interface provides the following methods:
-
-#### Basic Operations
-
-- `set(key, value, ttl?)` - Set a key-value pair with optional TTL
-- `get(key)` - Get value by key
-- `del(key)` - Delete a key
-- `exists(key)` - Check if key exists
-- `ttl(key)` - Get TTL for a key
-- `expire(key, ttl)` - Set expiry for a key
-- `keys(pattern)` - Get keys by pattern
-- `mget(...keys)` - Get multiple values
-- `mset(keyValues)` - Set multiple key-value pairs
-
-#### Advanced Operations (if supported by provider)
-
-- **Hash operations**: `hset`, `hget`, `hgetall`, `hdel`
-- **List operations**: `lpush`, `rpush`, `lpop`, `rpop`, `lrange`
-- **Set operations**: `sadd`, `smembers`, `srem`, `spop`
-- **Sorted set operations**: `zadd`, `zrange`, `zrem`
-
-### Usage in Code
-
-````typescript
-import { Inject } from '@nestjs/common';
-import { ICacheService } from './shared/cache';
-
-@Injectable()
-export class MyService {
-  constructor(
-    @Inject('CACHE_STORE') private readonly cache: ICacheService,
-  ) {}
-
-  async cacheData(key: string, data: any, ttl: number = 3600) {
-    await this.cache.set(key, JSON.stringify(data), ttl);
-  }
-
-  async getCachedData(key: string) {
-    const cached = await this.cache.get(key);
-    return cached ? JSON.parse(cached) : null;
-  }
-}
-
-## Project setup
+## 📋 사용 가능한 스크립트
 
 ```bash
-$ yarn install
-````
+# 개발
+yarn start:dev          # 개발 모드 (핫 리로드)
+yarn start:debug        # 디버그 모드
 
-## Compile and run the project
+# 빌드
+yarn build              # 프로덕션 빌드
+yarn start:prod         # 프로덕션 실행
 
-```bash
-# development
-$ yarn run start
+# 테스트
+yarn test               # 단위 테스트
+yarn test:e2e          # E2E 테스트
 
-# watch mode
-$ yarn run start:dev
+# Docker
+yarn docker:up         # 서비스 시작
+yarn docker:down       # 서비스 중지
+yarn docker:logs       # 로그 확인
 
-# production mode
-$ yarn run start:prod
+# Prisma
+yarn prisma:generate   # 클라이언트 생성
+yarn prisma:push       # 스키마 적용
+yarn prisma:studio     # DB GUI
 ```
 
-## Run tests
+## 🔍 API 엔드포인트
 
-```bash
-# unit tests
-$ yarn run test
+### 상태 확인
 
-# e2e tests
-$ yarn run test:e2e
+- `GET /health` - 전체 상태 체크
+- `GET /cache/status` - 캐시 연결 테스트
 
-# test coverage
-$ yarn run test:cov
-```
+### 사용자 API
 
-## Docker Scripts
+- `GET /users` - 사용자 목록
+- `POST /users` - 사용자 생성
+- `GET /users/:id` - 사용자 조회
+- `PATCH /users/:id` - 사용자 수정
+- `DELETE /users/:id` - 사용자 삭제
 
-Convenient scripts for Docker Compose management:
+## 🛠️ 기술 스택
 
-```bash
-# Start all services (PostgreSQL, Redis, Redis Commander)
-$ yarn docker:up
-
-# Stop all services
-$ yarn docker:down
-
-# View service logs
-$ yarn docker:logs
-
-# Check service status
-$ yarn docker:ps
-
-# Restart services
-$ yarn docker:restart
-```
-
-## API Endpoints
-
-### Health Check
-
-- `GET /health` - General health check with cache connection status
-- `GET /cache/status` - Detailed cache connection test
-- `GET /cache/demo` - Comprehensive cache operations demonstration
-
-Example responses:
-
-```bash
-# Health check
-curl http://localhost:3000/health
-
-# Cache status check
-curl http://localhost:3000/cache/status
-
-# Cache operations demo (shows all cache types)
-curl http://localhost:3000/cache/demo
-```
-
-### Users API
-
-- `GET /users` - Get all users
-- `GET /users/:id` - Get user by ID
-- `POST /users` - Create new user
-- `PATCH /users/:id` - Update user
-- `DELETE /users/:id` - Delete user
-
-Example usage:
-
-```bash
-# Create a user
-curl -X POST http://localhost:3000/users \
-  -H "Content-Type: application/json" \
-  -d '{"email": "test@example.com", "name": "Test User"}'
-
-# Get all users
-curl http://localhost:3000/users
-```
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- **Framework**: NestJS
+- **Database**: PostgreSQL + Prisma ORM
+- **Cache**: Redis (ioredis) / Upstash Redis
+- **Container**: Docker & Docker Compose
+- **Testing**: Jest
