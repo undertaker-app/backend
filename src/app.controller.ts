@@ -1,6 +1,7 @@
 import { Controller, Get, Inject } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ICacheService } from './shared/cache';
+import { Public } from './common/decorators/public.decorator';
 
 @Controller()
 export class AppController {
@@ -10,11 +11,13 @@ export class AppController {
   ) {}
 
   @Get()
+  @Public()
   getHello(): string {
     return this.appService.getHello();
   }
 
   @Get('health')
+  @Public()
   async getHealth() {
     return {
       status: 'ok',
@@ -26,6 +29,7 @@ export class AppController {
   }
 
   @Get('cache/status')
+  @Public()
   async getCacheStatus() {
     try {
       const isConnected = await this.cacheService.isConnected();
@@ -60,6 +64,7 @@ export class AppController {
 
   // Advanced cache operations demo
   @Get('cache/demo')
+  @Public()
   async getCacheDemo() {
     try {
       const demoData: any = {

@@ -1,7 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
+import { HttpExceptionFilter } from '../src/common/filters/http-exception.filter';
+import { ResponseInterceptor } from '../src/common/interceptors/response.interceptor';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -12,13 +14,33 @@ describe('AppController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+
+    // main.ts와 동일한 설정 적용
+    app.useGlobalPipes(
+      new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transformOptions: {
+          enableImplicitConversion: true,
+        },
+      }),
+    );
+
+    app.useGlobalFilters(new HttpExceptionFilter());
+    app.useGlobalInterceptors(new ResponseInterceptor());
+    app.setGlobalPrefix('api');
+
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  it('/api (GET)', () => {
     return request(app.getHttpServer())
-      .get('/')
+      .get('/api')
       .expect(200)
-      .expect('Hello World!');
+      .expect((res) => {
+        expect(res.body.success).toBe(true);
+        expect(res.body.data).toBe('Hello World!');
+      });
   });
 });
